@@ -1,4 +1,5 @@
 // Only packaged source is evaluated. No remote executable updates.
+importScripts('updates.js');
 const sessions = new Map();
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const allowed = url => {
@@ -65,6 +66,7 @@ async function install(tabId, session) {
   }
 }
 async function handleAction(tab) {
+  checkUpdates();
   if (!tab.id) return;
   if (sessions.has(tab.id)) { await stop(tab.id, 'остановлено · нажмите для запуска'); return; }
   if (!allowed(tab.url)) { await status(tab.id, '2GIS', 'откройте https://2gis.ru и нажмите значок'); return; }

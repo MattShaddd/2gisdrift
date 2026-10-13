@@ -14,6 +14,31 @@ const assert = require('node:assert/strict');
   });
   try {
     const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
+    await worker.evaluate(() => checkUpdates());
+    const notificationCheck = await worker.evaluate(async () => {
+      const originalFetch = fetch;
+      try {
+        await chrome.storage.local.remove(['updateLastCheck', 'updateNotifiedVersion']);
+        self.fetch = async (...args) => String(args[0]) === UPDATE_API
+          ? new Response(JSON.stringify({tag_name: 'v0.1.2', html_url: 'https://github.com/MattShaddd/2gisdrift/releases/tag/v0.1.2', draft: false, prerelease: false}), {status: 200})
+          : originalFetch(...args);
+        await checkUpdates();
+        const state = await chrome.storage.local.get(['updateAvailableVersion', 'updateNotifiedVersion']);
+        const notices = await chrome.notifications.getAll();
+        const alarm = await chrome.alarms.get('drift-release-check');
+        return {state, notified: !!notices['drift-new-release'], period: alarm?.periodInMinutes};
+      } finally {
+        self.fetch = originalFetch;
+        await chrome.notifications.clear('drift-new-release');
+        await chrome.storage.local.remove(['updateLastCheck', 'updateNotifiedVersion', 'updateAvailableVersion']);
+      }
+    });
+    console.log('NOTIFICATION STATE', notificationCheck);
+    assert.equal(notificationCheck.state.updateAvailableVersion, '0.1.2');
+    assert.equal(notificationCheck.state.updateNotifiedVersion, '0.1.2');
+    assert.equal(notificationCheck.notified, true);
+    assert.equal(notificationCheck.period, 15);
+    console.log('NOTIFICATION PASS: real browser notification API and persistent alarm (simulated future release)');
     const page = context.pages()[0];
     await page.goto('https://2gis.ru/novosibirsk?m=82.945737%2C55.020442%2F19%2Fp%2F50');
     const tab = await worker.evaluate(async () => {

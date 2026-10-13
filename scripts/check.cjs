@@ -7,8 +7,9 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const manifest = JSON.parse(read('extension/manifest.json'));
 if (manifest.manifest_version !== 3 || manifest.minimum_chrome_version !== '125') throw Error('Unexpected manifest');
 if (manifest.version !== JSON.parse(read('package.json')).version) throw Error('Version mismatch');
-if (JSON.stringify(manifest.permissions) !== '["activeTab","debugger"]') throw Error('Unexpected permissions');
-for (const p of ['extension/background.js', 'src/game/car.js', 'src/game/world.js', 'src/game/worker.js']) {
+if (JSON.stringify(manifest.permissions) !== '["activeTab","debugger","alarms","storage","notifications"]') throw Error('Unexpected permissions');
+if (JSON.stringify(manifest.host_permissions) !== '["https://api.github.com/*"]') throw Error('Unexpected hosts');
+for (const p of ['extension/background.js', 'extension/updates.js', 'src/game/car.js', 'src/game/world.js', 'src/game/worker.js']) {
   new vm.Script(read(p), {filename: p});
 }
 for (const name of ['car.js', 'world.js', 'worker.js', 'ATTRIBUTION.txt', 'POLYGON-LICENSE.md']) {
