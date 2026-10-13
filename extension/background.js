@@ -53,6 +53,8 @@ async function install(tabId, session) {
     await evaluate(target, await source('car') + '\n;void 0;');
     await until('!!window.driftCarModel');
     if (!valid()) return;
+    await evaluate(target, await source('water') + '\n;void 0;');
+    await evaluate(target, await source('clipping') + '\n;void 0;');
     await evaluate(target, 'driftCarRuntime.setActive(true);void 0;');
     await status(tabId, 'ON', 'игра готова · нажмите для остановки');
   } catch (error) {

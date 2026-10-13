@@ -20,7 +20,7 @@ const assert = require('node:assert/strict');
       try {
         await chrome.storage.local.remove(['updateLastCheck', 'updateNotifiedVersion']);
         self.fetch = async (...args) => String(args[0]) === UPDATE_API
-          ? new Response(JSON.stringify({tag_name: 'v0.1.2', html_url: 'https://github.com/MattShaddd/2gisdrift/releases/tag/v0.1.2', draft: false, prerelease: false}), {status: 200})
+          ? new Response(JSON.stringify({tag_name: 'v0.1.3', html_url: 'https://github.com/MattShaddd/2gisdrift/releases/tag/v0.1.3', draft: false, prerelease: false}), {status: 200})
           : originalFetch(...args);
         await checkUpdates();
         const state = await chrome.storage.local.get(['updateAvailableVersion', 'updateNotifiedVersion']);
@@ -34,12 +34,14 @@ const assert = require('node:assert/strict');
       }
     });
     console.log('NOTIFICATION STATE', notificationCheck);
-    assert.equal(notificationCheck.state.updateAvailableVersion, '0.1.2');
-    assert.equal(notificationCheck.state.updateNotifiedVersion, '0.1.2');
+    assert.equal(notificationCheck.state.updateAvailableVersion, '0.1.3');
+    assert.equal(notificationCheck.state.updateNotifiedVersion, '0.1.3');
     assert.equal(notificationCheck.notified, true);
     assert.equal(notificationCheck.period, 15);
     console.log('NOTIFICATION PASS: real browser notification API and persistent alarm (simulated future release)');
     const page = context.pages()[0];
+    const pageErrors = new Set();
+    page.on('pageerror', error => { if (!pageErrors.has(error.message)) {pageErrors.add(error.message); console.log('PAGE ERROR', error.stack);} });
     await page.goto('https://2gis.ru/novosibirsk?m=82.945737%2C55.020442%2F19%2Fp%2F50');
     const tab = await worker.evaluate(async () => {
       const target = (await chrome.debugger.getTargets()).find(t => t.type === 'page' && t.url.startsWith('https://2gis.ru/'));
@@ -53,7 +55,7 @@ const assert = require('node:assert/strict');
     for (let n = 0; n < 120; n++) {
       const state = await worker.evaluate(id => ({error: sessions.get(id)?.error, workerError: sessions.get(id)?.workerError}), tab.id);
       if (state.error) throw Error(JSON.stringify(state));
-      if (await page.evaluate(() => !!window.driftCarModel && !!window.driftCarRuntime?.getState().active).catch(() => false)) break;
+      if (await page.evaluate(() => !!window.driftCarModel && !!window.driftCarRuntime?.getState().active && !!window.driftCameraClipping).catch(() => false)) break;
       if (n % 15 === 0) console.log('Preparing live map', n, state);
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
@@ -61,6 +63,9 @@ const assert = require('node:assert/strict');
     assert(ready.model && ready.active && ready.bridge.chunks > 0, JSON.stringify(ready));
     console.log('READY', ready);
     assert.equal(await page.evaluate(() => mapgl.getWebGLContext().getError()), 0);
+    const water = await page.evaluate(() => window.driftWaterVisibility?.getState());
+    assert(water?.patchedLayers > 0 && !water.error, JSON.stringify(water));
+    assert(await page.evaluate(() => !!window.driftCameraClipping));
     const output = path.resolve(__dirname, '../output');
     fs.mkdirSync(output, {recursive: true});
     await page.screenshot({path: path.join(output, 'browser-ready.png')});
