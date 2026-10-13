@@ -1,0 +1,10 @@
+{
+  "name": "2gisdrift",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Unofficial browser driving experiment on 2GIS",
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "check": "node scripts/check.cjs"
+  }
+}

@@ -1,0 +1,2 @@
+* text=auto eol=lf
+src/game/*.js -text whitespace=cr-at-eol

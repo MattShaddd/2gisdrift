@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "2GIS Drift",
+  "version": "0.1.0",
+  "minimum_chrome_version": "125",
+  "description": "Экспериментальная игра на карте 2ГИС. Нажмите значок на странице 2gis.ru для запуска.",
+  "permissions": ["activeTab", "debugger"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_title": "2GIS Drift — запустить на 2gis.ru (карта перезагрузится)"}
+}
