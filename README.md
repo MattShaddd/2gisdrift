@@ -4,7 +4,7 @@
 
 ## Установка Chrome / Edge на другом компьютере
 
-1. Скачайте `2gisdrift-extension.zip` из GitHub Releases и распакуйте в постоянную папку. Не загружайте ZIP непосредственно в браузер.
+1. Скачайте `2gisdrift-extension.zip` из [GitHub Releases](https://github.com/MattShaddd/2gisdrift/releases/latest) и распакуйте в постоянную папку. Не загружайте ZIP непосредственно в браузер.
 2. Откройте `chrome://extensions` или `edge://extensions`, включите режим разработчика → «Загрузить распакованное расширение» → выберите папку с `manifest.json`.
 3. Откройте https://2gis.ru/novosibirsk и закрепите значок расширения.
 4. Нажмите значок. **Карта перезагрузится**, чтобы подключить код столкновений к её worker-потокам. Дождитесь `ON` на значке; подготовка может занять до 90 секунд.
@@ -21,7 +21,7 @@ WASD / стрелки — движение; Пробел — ручник; B —
 Нужны Git и Node.js 24+. Зависимостей для сборки нет.
 
 ```powershell
-git clone https://github.com/YOUR_ACCOUNT/2gisdrift.git
+git clone https://github.com/MattShaddd/2gisdrift.git
 cd 2gisdrift
 npm run build
 npm run check
