@@ -71,3 +71,6 @@ chrome.notifications.onClicked.addListener(id => { openUpdateRelease(id).catch((
 chrome.notifications.onButtonClicked.addListener((id, index) => { if (index === 0) openUpdateRelease(id).catch(() => {}); });
 // Alarms may be cleared on restart; recreate on any service worker wake-up.
 ensureUpdateAlarm().catch(() => {});
+// Re-enabling an extension starts its worker without firing onInstalled/onStartup.
+// Also check here; the persistent interval prevents repeated wake-ups spamming API.
+checkUpdates();

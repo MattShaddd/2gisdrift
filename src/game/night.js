@@ -6,6 +6,8 @@
 })(globalThis, () => {
   function color(value, text = false) {
     if (typeof value !== 'string') return value;
+    value = ({white:'#ffffff', black:'#000000', transparent:'#00000000'})[value.toLowerCase()] || value;
+    if (/^#[\da-f]{3,4}$/i.test(value)) value = '#' + [...value.slice(1)].map(c => c + c).join('');
     let rgba;
     const hex = value.match(/^#([\da-f]{6})([\da-f]{2})?$/i);
     const rgb = value.match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)$/i);
@@ -29,12 +31,24 @@
     light.lightingModes = {...light.lightingModes, driftNightModels: ['driftMoon', 'driftRim']};
     return light;
   }
+  function windows(seed = 7319) {
+    const columns = 8, rows = 8, cell = 64, pattern = [], shapes = [];
+    let state = seed >>> 0;
+    const random = () => {state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296;};
+    for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
+      const lit = random() < .43, x = column * cell + 20, y = row * cell + 17;
+      pattern.push(lit);
+      if (lit) shapes.push(`<rect x="${x}" y="${y}" width="24" height="30" fill="#ffd28a" opacity=".24" filter="url(#glow)"/>`);
+      shapes.push(`<rect x="${x}" y="${y}" width="24" height="30" fill="${lit ? '#ffe1a0' : '#142031'}"/>`);
+    }
+    // Seeded pattern is stable under camera movement and day/night toggling.
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5"/></filter></defs>${shapes.join('')}</svg>`;
+    return {svg, columns, rows, pattern};
+  }
   function transform(original) {
     const style = JSON.parse(JSON.stringify(original));
     let windowLayers = 0, modelLayers = 0, treeLayers = 0;
-    // Several lit and unlit panes per tile prevent a uniformly lit facade.
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" viewBox="0 0 128 64"><rect x="14" y="18" width="26" height="28" rx="1" fill="#ffd68a"/><rect x="19" y="22" width="16" height="20" fill="#fff0bb"/><rect x="78" y="18" width="26" height="28" rx="1" fill="#101d30"/><path d="M27 18v28M14 32h26M91 18v28M78 32h26" stroke="#514637" stroke-width="2"/></svg>';
-    const texture = {url: `data:image/svg+xml;base64,${typeof btoa === 'function' ? btoa(svg) : Buffer.from(svg).toString('base64')}`};
+    const textures = new Map();
     function walk(layers) {
       for (const layer of layers || []) {
         if (layer.layers) walk(layer.layers);
@@ -55,8 +69,19 @@
         if (s.sideTextures?.some(t => /^window\d*$/i.test(t.image))) {
           for (const t of s.sideTextures) {
             if (!/^window\d*$/i.test(t.image)) continue;
-            // Original physical spacing/padding stays intact.
-            style.icons[t.image] = texture;
+            if (!textures.has(t.image)) {
+              const seed = [...t.image].reduce((n, c) => (Math.imul(n, 31) + c.charCodeAt(0)) >>> 0, 7319);
+              const atlas = windows(seed);
+              textures.set(t.image, atlas);
+              style.icons[t.image] = {url: `data:image/svg+xml;base64,${typeof btoa === 'function' ? btoa(atlas.svg) : Buffer.from(atlas.svg).toString('base64')}`};
+            }
+            const atlas = textures.get(t.image);
+            // Each old tile had two columns; expand the repeat area to an atlas
+            // without enlarging the actual windows or their floor spacing.
+            const size = t.sliceSize || [5, 2.5];
+            t.sliceSize = [size[0] * atlas.columns / 2, size[1] * atlas.rows];
+            t.horizontal = {...t.horizontal, slicesCount: atlas.columns};
+            t.vertical = {...t.vertical, slicesCount: atlas.rows};
           }
           windowLayers++;
         }
@@ -72,7 +97,7 @@
     }
     return {style, windowLayers, modelLayers, treeLayers};
   }
-  return {transform, color, lighting};
+  return {transform, color, lighting, windows};
 });
 
 (async () => {

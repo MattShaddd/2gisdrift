@@ -36,6 +36,14 @@ test('new release notifies once, throttles checks and opens only canonical relea
   await h.run("openUpdateRelease('drift-new-release')");
   assert.equal(h.tabs.length, 1);
 });
+test('Worker activation checks releases without installation or browser-start events', async () => {
+  const h=harness();
+  await h.run('updateRequest');
+  assert.equal(h.requests.length,1);
+  assert.equal(h.state.updateAvailableVersion,'0.1.2');
+  await h.run('checkUpdates()');
+  assert.equal(h.requests.length,1,'Action immediately after activation must reuse the interval');
+});
 test('version ordering and malformed, draft, prerelease, redirected release metadata', () => {
   const h = harness();
   assert(h.run("newerVersion('0.10.0', '0.9.9')"));
