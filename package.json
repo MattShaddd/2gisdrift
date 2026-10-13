@@ -1,10 +1,10 @@
 {
   "name": "2gisdrift",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "Unofficial browser driving experiment on 2GIS",
   "scripts": {
     "build": "node scripts/build.cjs",
-    "check": "node scripts/check.cjs && node --test scripts/updates.test.cjs scripts/water.test.cjs scripts/clipping.test.cjs"
+    "check": "node scripts/check.cjs && node --test scripts/updates.test.cjs scripts/water.test.cjs scripts/clipping.test.cjs scripts/sinking.test.cjs scripts/props.test.cjs scripts/vehicle.test.cjs scripts/night.test.cjs"
   }
 }

@@ -9,10 +9,10 @@ if (manifest.manifest_version !== 3 || manifest.minimum_chrome_version !== '125'
 if (manifest.version !== JSON.parse(read('package.json')).version) throw Error('Version mismatch');
 if (JSON.stringify(manifest.permissions) !== '["activeTab","debugger","alarms","storage","notifications"]') throw Error('Unexpected permissions');
 if (JSON.stringify(manifest.host_permissions) !== '["https://api.github.com/*"]') throw Error('Unexpected hosts');
-for (const p of ['extension/background.js', 'extension/updates.js', 'src/game/car.js', 'src/game/world.js', 'src/game/worker.js', 'src/game/water.js', 'src/game/clipping.js']) {
+for (const p of ['extension/background.js', 'extension/updates.js', 'src/game/car.js', 'src/game/world.js', 'src/game/worker.js', 'src/game/water.js', 'src/game/night.js', 'src/game/clipping.js', 'src/game/props.js', 'src/game/vehicle.js', 'src/game/interface.js']) {
   new vm.Script(read(p), {filename: p});
 }
-for (const name of ['car.js', 'world.js', 'worker.js', 'water.js', 'clipping.js', 'ATTRIBUTION.txt', 'POLYGON-LICENSE.md']) {
+for (const name of ['car.js', 'world.js', 'worker.js', 'water.js', 'night.js', 'clipping.js', 'props.js', 'vehicle.js', 'interface.js', 'ATTRIBUTION.txt', 'POLYGON-LICENSE.md']) {
   if (!fs.readFileSync(path.join(root, 'src/game', name)).equals(fs.readFileSync(path.join(root, 'extension/game', name)))) throw Error(`Stale bundle: ${name}`);
 }
 // Only print filenames/rule names. Never echo potential credentials.

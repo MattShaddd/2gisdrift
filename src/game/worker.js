@@ -62,7 +62,7 @@
    try{
     const clean={...options,hoverId:undefined,generateOnlyHoveredPoi:false,generateOnlySelectedPoi:false,selectedIds:[],dataFilter:undefined,promoteId:'id',promoteAttributes:[],modelShowHideEventsSublayers:{},floorsEnabled:false};
     const decoded=await (self.driftCollisionGenerate||original.generate).call(this,clean,true),groups=new Map();
-    chunk.terrain=(decoded.geoJsonData||[]).filter(f=>/^(Internal_lawn|Forest_quarter|Internal_forest_quarter|Flowerbed_quarter|Main_Roadbed|Pocket_Roadbed|Parking_area|Pedestrian_quarter)$/.test(f.properties.db_sublayer)&&/Polygon/.test(f.geometry?.type));
+    chunk.terrain=(decoded.geoJsonData||[]).filter(f=>(/^(Internal_lawn|Forest_quarter|Internal_forest_quarter|Flowerbed_quarter|Main_Roadbed|Pocket_Roadbed|Parking_area|Pedestrian_quarter)$/.test(f.properties.db_sublayer)||/water|river|lake|reservoir|pond|pool|ocean|sea_quarter/i.test(f.properties.db_sublayer))&&/Polygon/.test(f.geometry?.type));
     let fenceSerial=0;
     for(const f of decoded.geoJsonData||[]){
      if(f.properties.db_sublayer==='Fence'&&f.geometry?.type==='LineString'){
@@ -120,7 +120,7 @@
 
 // Worker extension for an already installed streaming session.
 (()=>{if(self.driftTerrainHook||!self.driftStream)return;const original=self.driftCollisionGenerate||driftStream.original.generate,terrain=new Map();
-const collect=(d,o)=>{const f=(d?.geoJsonData||[]).filter(f=>/^(Internal_lawn|Forest_quarter|Internal_forest_quarter|Flowerbed_quarter|Main_Roadbed|Pocket_Roadbed|Parking_area|Pedestrian_quarter)$/.test(f.properties.db_sublayer)&&/Polygon/.test(f.geometry?.type));const coords=o.tileInfo.coords;terrain.set(coords.join('_'),f);while(terrain.size>20)terrain.delete(terrain.keys().next().value);for(const c of driftStream.chunks.values())if(c.coords.join('_')===coords.join('_')){c.terrain=f;c.readyAt=driftStream.now();}return d;};
+const collect=(d,o)=>{const f=(d?.geoJsonData||[]).filter(f=>(/^(Internal_lawn|Forest_quarter|Internal_forest_quarter|Flowerbed_quarter|Main_Roadbed|Pocket_Roadbed|Parking_area|Pedestrian_quarter)$/.test(f.properties.db_sublayer)||/water|river|lake|reservoir|pond|pool|ocean|sea_quarter/i.test(f.properties.db_sublayer))&&/Polygon/.test(f.geometry?.type));const coords=o.tileInfo.coords;terrain.set(coords.join('_'),f);while(terrain.size>20)terrain.delete(terrain.keys().next().value);for(const c of driftStream.chunks.values())if(c.coords.join('_')===coords.join('_')){c.terrain=f;c.readyAt=driftStream.now();}return d;};
 self.driftCollisionGenerate=function(o,...a){const d=original.call(this,o,...a);return d?.then?d.then(d=>collect(d,o)):collect(d,o);};
 const timer=setInterval(()=>{const port=self.driftActivePort;if(!port||port.driftTerrainWrapped)return;const post=port.postMessage.bind(port);port.postMessage=(d,...a)=>{if(d.tag==='DRIFT_STREAM_DATA_V1')for(const c of d.changes)c.terrain=terrain.get(c.key.split(':').slice(1).join(':'));return post(d,...a);};port.driftTerrainWrapped=true;for(const c of driftStream.chunks.values())c.readyAt=driftStream.now();},200);
 self.driftTerrainHook={timer,terrain};})();

@@ -43,6 +43,8 @@ async function install(tabId, session) {
   try {
     await until('!!window.mapgl?.getCanvas && !!window.mapgl?._impl?.modules?.workers');
     if (!valid()) return;
+    await evaluate(target, await source('night'));
+    if (!valid()) return;
     await evaluate(target, await source('world') + '\n;void 0;');
     await evaluate(target, 'mapgl.setZoom(18,{duration:0});mapgl.setPitch(50,{duration:0});void 0;');
     await sleep(700);
@@ -50,12 +52,15 @@ async function install(tabId, session) {
     await evaluate(target, 'mapgl.setZoom(21,{duration:0});void 0;');
     await until(`(()=>{const b=window.driftStreamingBridge,w=b?.world;if(!w||!b.chunks.size)return false;const p=w.toLocal(mapgl.getCenter());return w.sweep(p,p).reason!=='chunk-not-ready';})()`);
     if (!valid()) return;
+    await evaluate(target, await source('vehicle') + '\n;void 0;');
     await evaluate(target, await source('car') + '\n;void 0;');
     await until('!!window.driftCarModel');
     if (!valid()) return;
     await evaluate(target, await source('water') + '\n;void 0;');
+    await evaluate(target, await source('props') + '\n;void 0;');
     await evaluate(target, await source('clipping') + '\n;void 0;');
     await evaluate(target, 'driftCarRuntime.setActive(true);void 0;');
+    await evaluate(target, await source('interface') + '\n;void 0;');
     await status(tabId, 'ON', 'игра готова · нажмите для остановки');
   } catch (error) {
     if (valid()) {
